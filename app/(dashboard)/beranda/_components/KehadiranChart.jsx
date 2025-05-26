@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -11,16 +11,11 @@ import {
   Legend,
 } from "chart.js";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const KehadiranChart = () => {
+  const [chartData, setChartData] = useState(null);
+
   const tanggalHariIni = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     year: "numeric",
@@ -28,26 +23,34 @@ const KehadiranChart = () => {
     day: "numeric",
   });
 
-  const dataKehadiran = {
-    labels: [
-      "X A", "X B", "X C", "X D", "XI A", "XI B",
-      "XI C", "XI D", "XII A", "XII B", "XII C", "XII D"
-    ],
-    datasets: [
-      {
-        label: "Jumlah Kehadiran",
-        data: [20, 25, 30, 15, 5, 30, 14, 28, 25, 30, 25, 10],
-        backgroundColor: "#B2A5FF",
-        borderRadius: 20,
-      },
-      {
-        label: "Jumlah Keseluruhan Siswa",
-        data: [35, 40, 38, 32, 30, 45, 33, 40, 42, 38, 36, 29],
-        backgroundColor: "#493D9E",
-        borderRadius: 20,
-      },
-    ],
-  };
+  useEffect(() => {
+    fetch("http://localhost:8000/api/kehadiran-chart")
+      .then((res) => res.json())
+      .then((data) => {
+        const labels = data.map((item) => item.kelas);
+        const hadir = data.map((item) => item.hadir);
+        const total = data.map((item) => item.total);
+
+        setChartData({
+          labels,
+          datasets: [
+            {
+              label: "Jumlah Kehadiran",
+              data: hadir,
+              backgroundColor: "#B2A5FF",
+              borderRadius: 20,
+            },
+            {
+              label: "Jumlah Keseluruhan Siswa",
+              data: total,
+              backgroundColor: "#493D9E",
+              borderRadius: 20,
+            },
+          ],
+        });
+      })
+      .catch((err) => console.error("Gagal memuat data chart:", err));
+  }, []);
 
   const options = {
     responsive: true,
@@ -77,7 +80,11 @@ const KehadiranChart = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto p-0 rounded-2xl shadow-lg bg-white mt-5" style={{ height: "450px" }}>
-      <Bar data={dataKehadiran} options={options} />
+      {chartData ? (
+        <Bar data={chartData} options={options} />
+      ) : (
+        <p className="text-center p-10">Memuat data...</p>
+      )}
     </div>
   );
 };

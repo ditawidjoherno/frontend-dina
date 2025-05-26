@@ -1,24 +1,42 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-
-const data = [
-  { name: 'Hadir', jumlah: 50, color: "#5CB338", hoverColor: "#4AA62D" }, // Hijau
-  { name: 'Tidak Hadir', jumlah: 40, color: "#FB4141", hoverColor: "#D93636" }, // Merah
-  { name: 'Terlambat', jumlah: 10, color: "#FFBB03", hoverColor: "#E6A800" }, // Kuning
-];
-
-const maxValue = 100;
 
 const AttendanceChart = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [hoverIndex, setHoverIndex] = useState(null);
+  const [data, setData] = useState([
+    { name: 'Hadir', jumlah: 0, color: "#5CB338", hoverColor: "#4AA62D" },
+    { name: 'Tidak Hadir', jumlah: 0, color: "#FB4141", hoverColor: "#D93636" },
+    { name: 'Terlambat', jumlah: 0, color: "#FFBB03", hoverColor: "#E6A800" },
+  ]);
+
+  useEffect(() => {
+    const bulan = selectedDate.getMonth() + 1;
+    const tahun = selectedDate.getFullYear();
+
+    fetch(`http://localhost:8000/api/statistik-bulanan?bulan=${bulan}&tahun=${tahun}`)
+      .then(res => res.json())
+      .then(res => {
+        if (res.data) {
+          setData(res.data);
+        }
+      })
+      .catch(() => {
+        // fallback jika API gagal
+        setData([
+          { name: 'Hadir', jumlah: 0, color: "#5CB338", hoverColor: "#4AA62D" },
+          { name: 'Tidak Hadir', jumlah: 0, color: "#FB4141", hoverColor: "#D93636" },
+          { name: 'Terlambat', jumlah: 0, color: "#FFBB03", hoverColor: "#E6A800" },
+        ]);
+      });
+  }, [selectedDate]);
 
   return (
     <div className="w-full h-auto p-4 bg-white rounded-2xl shadow-md mt-10">
       <h2 className="text-xl font-bold text-center mb-4">Statistik Kehadiran</h2>
-      
+
       {/* Pilihan Bulan & Tahun */}
       <div className="flex items-center space-x-4 mb-4 ml-5">
         <p className="font-semibold">Pilih Bulan & Tahun:</p>
@@ -33,24 +51,37 @@ const AttendanceChart = () => {
 
       <ResponsiveContainer width="100%" height={250}>
         <BarChart layout="vertical" data={data} margin={{ left: 20, right: 40 }} barGap={8}>
-          <XAxis type="number" domain={[0, maxValue]} tick={false} axisLine={false} />
-          <YAxis dataKey="name" type="category" width={0} axisLine={false} tickLine={false} tick={false} />
-          <Tooltip cursor={{ fill: "rgba(0, 0, 0, 0.1)" }} />
+          <XAxis
+            type="number"
+            domain={[0, 100]}
+            tick={false} 
+            axisLine={false}
+            tickLine={false} 
+          />
+          <YAxis
+            dataKey="name"
+            type="category"
+            width={0} 
+            axisLine={false}
+            tickLine={false}
+            tick={false}
+          />
+          <Tooltip formatter={(value) => `${value}%`} />
           <Bar dataKey="jumlah" barSize={45} radius={[0, 10, 10, 0]}>
             {data.map((entry, index) => (
-              <Cell 
-                key={`cell-${index}`} 
-                fill={hoverIndex === index ? entry.hoverColor : entry.color} 
-                onMouseEnter={() => setHoverIndex(index)} 
+              <Cell
+                key={`cell-${index}`}
+                fill={hoverIndex === index ? entry.hoverColor : entry.color}
+                onMouseEnter={() => setHoverIndex(index)}
                 onMouseLeave={() => setHoverIndex(null)}
               />
             ))}
-            <LabelList 
-              dataKey="jumlah" 
-              position="right" 
-              formatter={(value) => `${((value / maxValue) * 100).toFixed(0)}%`} 
-              fill="#333" 
-              fontSize={14} 
+            <LabelList
+              dataKey="jumlah"
+              position="right"
+              formatter={(value) => `${value}%`}
+              fill="#333"
+              fontSize={14}
               fontWeight="bold"
               offset={10}
             />
@@ -58,7 +89,7 @@ const AttendanceChart = () => {
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Legend dalam bg putih yang sama */}
+      {/* Legend */}
       <div className="flex justify-center gap-6 mt-4">
         {data.map((item) => (
           <div key={item.name} className="flex items-center gap-2">

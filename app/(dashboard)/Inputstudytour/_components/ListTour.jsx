@@ -223,7 +223,7 @@ const handleSave = async () => {
     nisn,
     status: value.status,
     waktu_daftar: value.time,
-    tanggal_daftar: today, // format yyyy-mm-dd
+    tanggal_daftar: today,
   }));
 
 const payload = {

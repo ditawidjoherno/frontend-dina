@@ -1,45 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 const AttendanceTable = () => {
-  const [data] = useState([
-    {
-      date: 'Senin, 12 Maret 2025',
-      status: 'hadir',
-      waktu: '07.20 am',
-    },
-    {
-      date: 'Selasa, 13 Maret 2025',
-      status: 'tidak-hadir',
-      waktu: '07.20 am',
-    },
-    {
-      date: 'Rabu, 14 Maret 2025',
-      status: 'terlambat',
-      waktu: '07.30 am',
-    },
-  ]);
+  const searchParams = useSearchParams();
+  const nisn = searchParams.get('nisn');
+
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   // Fungsi untuk menentukan warna berdasarkan status
   const getStatusColor = (status) => {
     switch (status) {
-      case 'hadir':
+      case 'Hadir':
         return 'bg-green-500';
+      case 'Tidak Hadir':
       case 'tidak-hadir':
         return 'bg-red-500';
-      case 'terlambat':
+      case 'Terlambat':
         return 'bg-yellow-500';
       default:
         return 'bg-gray-400';
     }
   };
 
+  useEffect(() => {
+    if (!nisn) return;
+
+    setLoading(true);
+    setError(null);
+
+    fetch(`http://localhost:8000/api/absensi-detail?nisn=${nisn}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Gagal mengambil data absensi');
+        return res.json();
+      })
+      .then((json) => {
+        setData(json.absensi || []);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [nisn]);
+
+  if (!nisn) {
+    return <p className="text-center mt-10 text-red-500">Parameter nisn tidak ditemukan di URL</p>;
+  }
+
+  if (loading) {
+    return <p className="text-center mt-10">Loading data absensi...</p>;
+  }
+
+  if (error) {
+    return <p className="text-center mt-10 text-red-500">{error}</p>;
+  }
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg w-full mt-5">
-      <h2 className="text-center font-semibold text-xl text-blue-900 mb-6">
-        Maret 2025
-      </h2>
+      <h2 className="text-center font-semibold text-xl text-blue-900 mb-6">Absensi Siswa</h2>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
@@ -62,6 +81,14 @@ const AttendanceTable = () => {
             </tr>
           </thead>
           <tbody>
+            {data.length === 0 && (
+              <tr>
+                <td colSpan="5" className="p-4 text-center text-gray-500">
+                  Data absensi tidak tersedia.
+                </td>
+              </tr>
+            )}
+
             {data.map((item, index) => (
               <tr
                 key={index}
@@ -71,35 +98,31 @@ const AttendanceTable = () => {
                   {item.date}
                 </td>
 
-                {/* Indikator untuk Hadir */}
+                {/* Hadir */}
                 <td className="p-4 border-b border-gray-200">
                   <div
                     className={`w-6 h-6 rounded-full mx-auto ${
-                      item.status === 'hadir'
-                        ? getStatusColor('hadir')
+                      item.status === 'Hadir' ? getStatusColor('Hadir') : 'bg-gray-300'
+                    }`}
+                  ></div>
+                </td>
+
+                {/* Tidak Hadir */}
+                <td className="p-4 border-b border-gray-200">
+                  <div
+                    className={`w-6 h-6 rounded-full mx-auto ${
+                      item.status === 'Tidak Hadir' || item.status === 'Tidak Hadir'
+                        ? getStatusColor('Tidak Hadir')
                         : 'bg-gray-300'
                     }`}
                   ></div>
                 </td>
 
-                {/* Indikator untuk Tidak Hadir */}
+                {/* Terlambat */}
                 <td className="p-4 border-b border-gray-200">
                   <div
                     className={`w-6 h-6 rounded-full mx-auto ${
-                      item.status === 'tidak-hadir'
-                        ? getStatusColor('tidak-hadir')
-                        : 'bg-gray-300'
-                    }`}
-                  ></div>
-                </td>
-
-                {/* Indikator untuk Terlambat */}
-                <td className="p-4 border-b border-gray-200">
-                  <div
-                    className={`w-6 h-6 rounded-full mx-auto ${
-                      item.status === 'terlambat'
-                        ? getStatusColor('terlambat')
-                        : 'bg-gray-300'
+                      item.status === 'Terlambat' ? getStatusColor('Terlambat') : 'bg-gray-300'
                     }`}
                   ></div>
                 </td>

@@ -1,18 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ Pakai next/navigation
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { TextField, Button } from "@mui/material";
 import { FaDownload } from "react-icons/fa";
 import FilterButton from "./tombolfilter";
-
-const attendanceData = [
-  { id: 1, nisn: "1234567890", name: "Olivia Carter Sophia", class: "X-A", hadir: 12, terlambat: 4, tidakHadir: 2 },
-  { id: 2, nisn: "1234567891", name: "Olivia Carter Sophia", class: "X-B", hadir: 8, terlambat: 6, tidakHadir: 6 },
-  { id: 3, nisn: "1234567892", name: "Olivia Carter Sophia", class: "XI-A", hadir: 12, terlambat: 6, tidakHadir: 6 },
-  { id: 4, nisn: "1234567893", name: "Olivia Carter Sophia", class: "XI-C", hadir: 12, terlambat: 6, tidakHadir: 6 },
-  { id: 5, nisn: "1234567894", name: "Olivia Carter Sophia", class: "XII-A", hadir: 12, terlambat: 6, tidakHadir: 6 },
-];
 
 const formatName = (fullName) => {
   const nameParts = fullName.split(" ");
@@ -22,24 +14,53 @@ const formatName = (fullName) => {
 };
 
 const AttendanceMonthTable = () => {
-  const router = useRouter(); // ✅ Pakai useRouter dari next/navigation
+  const router = useRouter();
+
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("Semua Kelas");
+  const [attendanceData, setAttendanceData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const filteredData = attendanceData.filter((student) => {
-    const matchName = student.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchClass = selectedClass === "Semua Kelas" || student.class === selectedClass;
-    return matchName && matchClass;
-  });
+  // Jika backend menggunakan filter bulan dan tahun, bisa tambahkan state disini
+  const [bulan, setBulan] = useState(new Date().getMonth() + 1);
+  const [tahun, setTahun] = useState(new Date().getFullYear());
+
+  // Fungsi fetch data dari API backend Laravel
+  const fetchAttendance = async () => {
+    setLoading(true);
+    try {
+      // Bangun query params sesuai filter dan search
+      const params = new URLSearchParams();
+      if (searchTerm) params.append("search", searchTerm);
+      if (selectedClass && selectedClass !== "Semua Kelas") params.append("kelas", selectedClass);
+      if (bulan) params.append("bulan", bulan);
+      if (tahun) params.append("tahun", tahun);
+
+      const res = await fetch(`http://localhost:8000/api/list-absensi-siswa?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch data");
+
+      const data = await res.json();
+      setAttendanceData(data);
+    } catch (error) {
+      console.error("Error fetching attendance data:", error);
+      setAttendanceData([]);
+    }
+    setLoading(false);
+  };
+
+  // Fetch ulang saat searchTerm, selectedClass, bulan, atau tahun berubah
+  useEffect(() => {
+    fetchAttendance();
+  }, [searchTerm, selectedClass, bulan, tahun]);
 
   const handleDownload = () => {
     const csvContent = [
       ["No", "NISN", "Nama", "Kelas", "Hadir", "Terlambat", "Tidak Hadir"].join(","),
-      ...filteredData.map((student, index) => [
+      ...attendanceData.map((student, index) => [
         index + 1,
         student.nisn,
-        student.name,
-        student.class,
+        student.nama,
+        student.kelas,
         student.hadir,
         student.terlambat,
         student.tidakHadir
@@ -57,7 +78,7 @@ const AttendanceMonthTable = () => {
   };
 
   const handleDetailClick = (nisn) => {
-    router.push(`/detailabsensi?nisn=${nisn}`); // ✅ Navigasi ke halaman detail absensi
+    router.push(`/detailabsensi?nisn=${nisn}`);
   };
 
   return (
@@ -74,71 +95,77 @@ const AttendanceMonthTable = () => {
           />
           <FilterButton onSelect={setSelectedClass} />
         </div>
-        <Button variant="contained" color="success" onClick={handleDownload}>
+        <Button variant="contained" color="success" onClick={handleDownload} disabled={loading}>
           <FaDownload size={20} />
         </Button>
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="border-b-2 border-black text-center bg-gray-100 text-sm">
-              <th className="px-6 py-5">No</th>
-              <th className="px-6 py-5">NISN</th>
-              <th className="px-6 py-5">Nama</th>
-              <th className="px-6 py-5 text-left pl-8">Kelas</th>
-              <th className="px-6 py-5">Hadir</th>
-              <th className="px-6 py-5">Tidak Hadir</th>
-              <th className="px-6 py-5">Terlambat</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredData.map((student, index) => (
-              <tr key={student.id} className="border-b border-gray-300 text-center text-sm">
-                <td className="px-6 py-5">{index + 1}.</td>
-                <td className="px-6 py-5">{student.nisn}</td>
-                <td className="px-4 py-5">
-                  <a
-                    href="#"
-                    className="text-blue-500 hover:underline cursor-pointer"
-                    onClick={() => handleDetailClick(student.nisn)} // ✅ Navigasi saat nama ditekan
-                  >
-                    {formatName(student.name)}
-                  </a>
-                </td>
-                <td className="px-6 py-5 text-left pl-8">{student.class}</td>
-
-                {/* ✅ Hadir */}
-                <td className="px-6 py-5">
-                  <div className="flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-medium">
-                      {student.hadir}
-                    </div>
-                  </div>
-                </td>
-
-                {/* ✅ Tidak Hadir */}
-                <td className="px-6 py-5">
-                  <div className="flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500 text-white font-medium">
-                      {student.tidakHadir}
-                    </div>
-                  </div>
-                </td>
-
-                {/* ✅ Terlambat */}
-                <td className="px-6 py-5">
-                  <div className="flex justify-center">
-                    <div className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-500 text-white font-medium">
-                      {student.terlambat}
-                    </div>
-                  </div>
-                </td>
+        {loading ? (
+          <p className="text-center py-10 text-gray-500">Loading data...</p>
+        ) : (
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b-2 border-black text-center bg-gray-100 text-sm">
+                <th className="px-6 py-5">No</th>
+                <th className="px-6 py-5">NISN</th>
+                <th className="px-6 py-5">Nama</th>
+                <th className="px-6 py-5 text-left pl-8">Kelas</th>
+                <th className="px-6 py-5">Hadir</th>
+                <th className="px-6 py-5">Tidak Hadir</th>
+                <th className="px-6 py-5">Terlambat</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {attendanceData.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="text-center py-10 text-gray-500">
+                    Data tidak ditemukan.
+                  </td>
+                </tr>
+              ) : (
+                attendanceData.map((student, index) => (
+                  <tr key={student.id} className="border-b border-gray-300 text-center text-sm">
+                    <td className="px-6 py-5">{index + 1}.</td>
+                    <td className="px-6 py-5">{student.nisn}</td>
+                    <td className="px-4 py-5">
+                      <a
+                        href="#"
+                        className="text-blue-500 hover:underline cursor-pointer"
+                        onClick={() => handleDetailClick(student.nisn)}
+                      >
+                        {formatName(student.nama)}
+                      </a>
+                    </td>
+                    <td className="px-6 py-5 text-left pl-8">{student.kelas}</td>
+                    <td className="px-6 py-5">
+                      <div className="flex justify-center">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-green-500 text-white font-medium">
+                          {student.hadir}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex justify-center">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-red-500 text-white font-medium">
+                          {student.tidakHadir}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-5">
+                      <div className="flex justify-center">
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-yellow-500 text-white font-medium">
+                          {student.terlambat}
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

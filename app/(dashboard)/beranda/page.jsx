@@ -26,7 +26,6 @@ export default function Beranda() {
   const [role, setRole] = useState(null);
 
   useEffect(() => {
-    // Mengambil role dari localStorage setelah login
     const userData = JSON.parse(localStorage.getItem("user"));
     if (userData?.role) {
       setRole(userData.role);
