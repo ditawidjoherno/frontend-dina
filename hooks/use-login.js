@@ -1,4 +1,3 @@
-// hooks/use-login.js
 import axios from 'axios';
 import { setCookie } from "@/lib/cookieFunction";
 import { useState } from 'react';
@@ -11,43 +10,47 @@ const useLogin = () => {
   const router = useRouter();
   const cookieName = process.env.NEXT_PUBLIC_COOKIE_NAME;
 
-// hooks/use-login.js
+  const login = async ({ identifier, password }) => {
+    setLoading(true);
+    setError(null);
+    setUser(null);
 
-const login = async ({ identifier, password }) => {
-  setLoading(true);
-  setError(null);
-  setUser(null);
+    const payload = { identifier, password };
 
-  const payload = { identifier, password };
+    try {
+      // Ambil CSRF cookie sebelum login
+      await axios.get("http://localhost:8000/sanctum/csrf-cookie", {
+        withCredentials: true,  // Mengirim cookie CSRF
+      });
 
-  try {
-    // Use axios instead of axiosInstance
-    const response = await axios.post("http://localhost:8000/api/login", payload);
+      // Kirim request login dengan menggunakan credentials (cookie)
+      const response = await axios.post("http://localhost:8000/api/login", payload, {
+        withCredentials: true,  // Sertakan credentials/cookies dalam request
+      });
 
-    const { user: userData, token } = response.data;
+      const { user: userData, token } = response.data;
 
-    // Simpan data pengguna di localStorage
-    localStorage.setItem("user", JSON.stringify(userData));
-    
-    setUser(userData);
-    setCookie(cookieName, token, { path: '/', maxAge: 3600 });
+      // Simpan data pengguna di localStorage
+      localStorage.setItem("user", JSON.stringify(userData));
 
-    // Redirect berdasarkan role pengguna
-    if (userData.role === "siswa") {
-      router.push("/beranda/siswa"); 
-    } else if (userData.role === "guru") {
-      router.push("/beranda");
-    } else {
-      router.push("/beranda");
+      setUser(userData);
+      setCookie(cookieName, token, { path: '/', maxAge: 3600 });
+
+      // Redirect berdasarkan role pengguna
+      if (userData.role === "siswa") {
+        router.push("/beranda/siswa");
+      } else if (userData.role === "guru") {
+        router.push("/beranda");
+      } else {
+        router.push("/beranda");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Login failed.");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Login error:", err);
-    setError("Login failed.");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return { loading, error, user, login };
 };

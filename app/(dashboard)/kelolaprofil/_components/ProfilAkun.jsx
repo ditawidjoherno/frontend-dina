@@ -35,16 +35,16 @@ export default function ProfileCard() {
         <div className="grid grid-cols-2 gap-x-10 gap-y-6 w-full pl-14 mt-10">
           <div>
             <p className="font-bold text-lg">Nama</p>
-            <p className="text-gray-700 font-medium text-lg">{data?.nama}</p>
+            <p className="text-gray-700 font-medium text-lg">{data?.nama || "-"}</p>
           </div>
           <div>
             <p className="font-bold text-lg">Jabatan</p>
-            <p className="text-gray-700 font-medium text-lg">{data?.role}</p>
+            <p className="text-gray-700 font-medium text-lg">{data?.role || "-"}</p>
           </div>
           <div>
             <p className="font-bold text-lg">{data?.role === "guru" ? "NIP" : "NISN"}</p>
             <p className="text-gray-700 font-medium text-lg">
-              {data?.role === "guru" ? data?.nip : data?.nisn}
+              {data?.role === "guru" ? data?.nip : data?.nisn || "-"}
             </p>
           </div>
 
@@ -63,18 +63,18 @@ export default function ProfileCard() {
           </div>
           <div>
             <p className="font-semibold text-lg">Agama</p>
-            <p className="text-gray-700 font-medium text-lg">{data?.agama}</p>
+            <p className="text-gray-700 font-medium text-lg">{data?.agama || "-"}</p>
           </div>
           <div>
             <p className="font-semibold text-lg">No HP</p>
             <p className="text-gray-700 font-medium text-lg">
-              {data?.nomor_hp ? data.nomor_hp : "-"}
+              {data?.nomor_hp || "-"}
             </p>
           </div>
 
           <div>
             <p className="font-semibold text-lg">Email</p>
-            <p className="text-gray-700 font-medium text-lg">{data?.email}</p>
+            <p className="text-gray-700 font-medium text-lg">{data?.email || "-"}</p>
           </div>
         </div>
       </div>

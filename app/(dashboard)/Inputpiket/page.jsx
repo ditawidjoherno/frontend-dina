@@ -34,8 +34,9 @@ export default function InputPiket() {
         
         <AttendanceForm/>
 
+<div className="mt-5">
         <StudentList/>
-
+        </div>
         <div className="bg-white max-w-7xl rounded-2xl h-[480px]">
         <AttendanceChart/>
         </div>

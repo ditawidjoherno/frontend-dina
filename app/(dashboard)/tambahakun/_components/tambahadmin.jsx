@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaDownload, FaUserPlus } from "react-icons/fa";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -11,6 +11,9 @@ const AdminTable = () => {
   const [file, setFile] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const [showAddAccountPopup, setShowAddAccountPopup] = useState(false);
+  const [error, setError] = useState();
+  const [loading, setLoading] = useState();
+  const [guru, setGuru] = useState([]);
 
   const formatName = (fullName) => {
     const nameParts = fullName.split(" ");
@@ -18,44 +21,25 @@ const AdminTable = () => {
     return `${nameParts[0]} ${nameParts[1][0]}. ${nameParts[2][0]}. ${nameParts[nameParts.length - 1]}`;
   };
 
-  const users = [
-    {
-      id: "10XXXXX",
-      name: "Martin Anisa Abigail Watson",
-      class: "X IPA 1",
-      dob: "DD/MM/YYYY",
-      gender: "Perempuan",
-      religion: "Islam",
-      phone: "+62xxxxxxxx",
-      email: "martin@example.com",
-      password: "1234"
-    },
-    {
-      id: "10XXXXX",
-      name: "Taka Teke Rumba",
-      class: "XI IPS 2",
-      dob: "DD/MM/YYYY",
-      gender: "Perempuan",
-      religion: "Kristen",
-      phone: "+62xxxxxxxx",
-      email: "taka@example.com",
-      password: "1234"
-    },
-    {
-      id: "10XXXXX",
-      name: "Akio Anak Baiq",
-      class: "XII IPA 3",
-      dob: "DD/MM/YYYY",
-      gender: "Laki-laki",
-      religion: "Hindu",
-      phone: "+62xxxxxxxx",
-      email: "akio@example.com",
-      password: "1234"
-    }
-  ];
+  useEffect(() => {
+    fetch('http://localhost:8000/api/guru') // Ganti dengan URL API Laravel sesuai server kamu
+      .then((res) => {
+        if (!res.ok) throw new Error('Gagal mengambil data siswa');
+        return res.json();
+      })
+      .then((data) => {
+        setGuru(data.data || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+
+  const filteredUsers = guru.filter((guru) =>
+    guru.nama.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleFileUpload = (event) => {
@@ -141,25 +125,33 @@ const AdminTable = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user, index) => (
+            {filteredUsers.map((guru, index) => (
               <tr key={index} className="text-center">
-                <td className="border border-gray-300 p-2">{user.id}</td>
+                <td className="border border-gray-300 p-2">{guru.nip}</td>
                 <td className="border border-gray-300 p-2">
                   <a
                     href="#"
                     className="text-blue-500 underline"
-                    onClick={() => alert(`NISN: ${user.id}`)}
+                    onClick={() => alert(`NISN: ${guru.id}`)}
                   >
-                    {formatName(user.name)}
+                    {formatName(guru.nama) || "-"}
                   </a>
                 </td>
-                <td className="border border-gray-300 p-2">{user.class}</td>
-                <td className="border border-gray-300 p-2">{user.dob}</td>
-                <td className="border border-gray-300 p-2">{user.gender}</td>
-                <td className="border border-gray-300 p-2">{user.religion}</td>
-                <td className="border border-gray-300 p-2">{user.phone}</td>
-                <td className="border border-gray-300 p-2">{user.email}</td>
-                <td className="border border-gray-300 p-2">{user.password}</td>
+                <td className="border border-gray-300 p-2">{guru.kelas || "-"}</td>
+                <td className="border border-gray-300 p-2">
+                  {guru.tanggal_lahir
+                    ? new Date(guru.tanggal_lahir).toLocaleDateString("id-ID", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                    : "-"}
+                </td>
+                <td className="border border-gray-300 p-2">{guru.jenis_kelamin || "-"}</td>
+                <td className="border border-gray-300 p-2">{guru.agama || "-"}</td>
+                <td className="border border-gray-300 p-2">{guru.nomor_hp || "-"}</td>
+                <td className="border border-gray-300 p-2">{guru.email || "-"}</td>
+                <td className="border border-gray-300 p-2">{guru.password || "-"}</td>
               </tr>
             ))}
           </tbody>

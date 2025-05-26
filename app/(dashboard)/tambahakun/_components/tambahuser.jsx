@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FaUserPlus, FaDownload } from "react-icons/fa";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -13,21 +13,34 @@ const UserTable = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [showAddAccountPopup, setShowAddAccountPopup] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [error, setError] = useState();
+  const [loading, setLoading] = useState();
+  const [students, setStudents] = useState([]);
 
-  const formatName = (fullName) => {
-    const nameParts = fullName.split(" ");
-    if (nameParts.length <= 3) return fullName;
-    return `${nameParts[0]} ${nameParts[1][0]}. ${nameParts[2][0]}. ${nameParts[nameParts.length - 1]}`;
-  };
+  useEffect(() => {
+    fetch('http://localhost:8000/api/siswa') // Ganti dengan URL API Laravel sesuai server kamu
+      .then((res) => {
+        if (!res.ok) throw new Error('Gagal mengambil data siswa');
+        return res.json();
+      })
+      .then((data) => {
+        setStudents(data.data || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []);
 
-  const users = [
-    { id: "10XXXXX", name: "Martin Anisa Abigail Watson", dob: "DD/MM/YYYY", gender: "Perempuan", religion: "Kristen", phone: "081234567890", email: "martin@gmail.com", major: "X-A", password: "1234" },
-    { id: "10XXXXX", name: "Taka Teke Rumba", dob: "DD/MM/YYYY", gender: "Perempuan", religion: "Islam", phone: "082345678901", email: "taka@gmail.com", major: "XI-A", password: "1234" },
-    { id: "10XXXXX", name: "Akio Anak Baiq", dob: "DD/MM/YYYY", gender: "Laki-laki", religion: "Hindu", phone: "083456789012", email: "akio@gmail.com", major: "XII-B", password: "1234" },
-  ];
+  // const formatName = (fullName) => {
+  //   const nameParts = fullName.split(" ");
+  //   if (nameParts.length <= 3) return fullName;
+  //   return `${nameParts[0]} ${nameParts[1][0]}. ${nameParts[2][0]}. ${nameParts[nameParts.length - 1]}`;
+  // };
 
-  const filteredUsers = users.filter((user) =>
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = students.filter((students) =>
+    students.nama.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleFileUpload = (event) => {
@@ -126,39 +139,47 @@ const UserTable = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredUsers.map((user, index) => (
+            {filteredUsers.map((students, index) => (
               <tr key={index} className="text-center">
-                <td className="border border-gray-300 p-2">{user.id}</td>
+                <td className="border border-gray-300 p-2">{students.nisn}</td>
                 <td className="border border-gray-300 p-2">
-  <a
-    href="#"
-    className="text-blue-500 underline hover:text-blue-700"
-    onClick={() => handleOpenProfile(user)}
-  >
-    {formatName(user.name)}
-  </a>
-</td>
-                <td className="border border-gray-300 p-2">{user.major}</td>
-                <td className="border border-gray-300 p-2">{user.dob}</td>
-                <td className="border border-gray-300 p-2">{user.gender}</td>
-                <td className="border border-gray-300 p-2">{user.religion}</td>
-                <td className="border border-gray-300 p-2">{user.phone}</td>
-                <td className="border border-gray-300 p-2">{user.email}</td>
-                <td className="border border-gray-300 p-2">{user.password}</td>
+                  <a
+                    href="#"
+                    className="text-blue-500 underline hover:text-blue-700"
+                    onClick={() => handleOpenProfile(students)}
+                  >
+                    {students.nama || "-"}
+                  </a>
+                </td>
+                <td className="border border-gray-300 p-2">{students.kelas || "-"}</td>
+                <td className="border border-gray-300 p-2">
+                  {students.tanggal_lahir
+                    ? new Date(students.tanggal_lahir).toLocaleDateString("id-ID", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })
+                    : "-"}
+                </td>
+                <td className="border border-gray-300 p-2">{students.jenis_kelamin || "-"}</td>
+                <td className="border border-gray-300 p-2">{students.agama || "-"}</td>
+                <td className="border border-gray-300 p-2">{students.nomor_hp || "-"}</td>
+                <td className="border border-gray-300 p-2">{students.email || "-"}</td>
+                <td className="border border-gray-300 p-2">{students.password || "-"}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      
+
       {selectedUser && (
-  <ProfileDetail user={selectedUser} onClose={handleCloseProfilePopup} />
-)}
+        <ProfileDetail user={selectedUser} onClose={handleCloseProfilePopup} />
+      )}
 
       {/* ✅ Popup Tambah Akun */}
       {showAddAccountPopup && (
         <div className="fixed mt-10 inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-2xl shadow-lg max-w-4xl relative">
+          <div className="bg-white h-auto p-6 rounded-2xl shadow-lg max-w-4xl relative">
             <button
               className="absolute top-2 right-2 text-gray-600 text-xl"
               onClick={handleCloseAddAccountPopup}

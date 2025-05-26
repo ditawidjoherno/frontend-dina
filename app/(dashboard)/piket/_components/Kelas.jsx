@@ -4,17 +4,28 @@ import { useRouter } from "next/navigation"; // ✅ Menambahkan useRouter untuk 
 import { motion } from "framer-motion";
 
 const initialClasses = [
-  "X-A", "X-B", "X-C",
-  "XI-A", "XI-B", "XI-C",
-  "XII-A", "XII-B", "XII-C" // Tambahkan kelas sesuai kebutuhan
+  "X A", "X B", "X C", "X D",
+  "XI A", "XI B", "XI C", "XI D",
+  "XII A", "XII B", "XII C", "XII D", "XII IBBU"
 ];
+
+const romanToNumber = {
+  "X": "10",
+  "XI": "11",
+  "XII": "12"
+};
+
 
 const ClassGrid = () => {
   const [classes, setClasses] = useState(initialClasses);
   const router = useRouter(); // ✅ Inisialisasi router
 
   const handleClassClick = (className) => {
-    router.push(`/Inputpiket?kelas=${encodeURIComponent(className)}`); // ✅ Router diperbaiki
+    const [roman, subClass] = className.split(" ");
+    const kelasAngka = romanToNumber[roman] || roman;
+    const kelasFinal = `${kelasAngka}${subClass}`;
+
+    router.push(`/Inputpiket?kelas=${encodeURIComponent(kelasFinal)}`);
   };
 
   return (

@@ -1,29 +1,68 @@
 // components/TambahAkunForm.jsx
+import { useState } from "react";
 import { FaTimes, FaCalendarAlt } from "react-icons/fa";
+import addUser from "@/hooks/use-register";
 
 export default function TambahAkunForm() {
-  return (
-    <div className="relative ">
-      {/* Tombol Close */}
+  const { user, loading, error, data } = addUser();
 
+  const [formData, setFormData] = useState({
+    nisn: "",
+    nama: "",
+    kelas: "",
+    tanggal_lahir: "",
+    nomor_hp: "",
+    jenis_kelamin: "",
+    agama: "",
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    ...formData,
+    role: "siswa",
+    nip: "",
+  };
+
+  await user(payload);
+};
+
+  return (
+    <div className="relative">
       {/* Judul */}
-      <h2 className="text-center text-xl font-bold mb-4">Tambah Akun</h2>
+      <h2 className="text-center text-xl font-bold mb-2">Tambah Akun</h2>
 
       {/* Form */}
-      <form className="grid grid-cols-2 gap-6">
+      <form className="grid grid-cols-2 gap-3" onSubmit={handleSubmit}>
         {/* NISN */}
         <div>
           <label className="block font-medium mb-1">NISN</label>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100"
+            name="nisn"
+            value={formData.nisn}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
           />
         </div>
 
         {/* Agama */}
         <div>
           <label className="block font-medium mb-1">Agama</label>
-          <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100">
+          <select
+            name="agama"
+            value={formData.agama}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
+          >
             <option value="">Pilih Agama</option>
             <option value="islam">Islam</option>
             <option value="kristen">Kristen</option>
@@ -39,14 +78,22 @@ export default function TambahAkunForm() {
           <label className="block font-medium mb-1">Nama</label>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100"
+            name="nama"
+            value={formData.nama}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
           />
         </div>
 
         {/* Kelas */}
         <div>
           <label className="block font-medium mb-1">Kelas</label>
-          <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100">
+          <select
+            name="kelas"
+            value={formData.kelas}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
+          >
             <option value="">Pilih Kelas</option>
             <option value="10">10</option>
             <option value="11">11</option>
@@ -57,12 +104,13 @@ export default function TambahAkunForm() {
         {/* Tanggal Lahir */}
         <div>
           <label className="block font-medium mb-1">Tanggal Lahir</label>
-          <div className="relative">
-            <input
-              type="date"
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100"
-            />
-          </div>
+          <input
+            type="date"
+            name="tanggal_lahir"
+            value={formData.tanggal_lahir}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
+          />
         </div>
 
         {/* No HP */}
@@ -70,17 +118,25 @@ export default function TambahAkunForm() {
           <label className="block font-medium mb-1">No HP</label>
           <input
             type="text"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100"
+            name="nomor_hp"
+            value={formData.nomor_hp}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
           />
         </div>
 
         {/* Jenis Kelamin */}
         <div>
           <label className="block font-medium mb-1">Jenis Kelamin</label>
-          <select className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100">
+          <select
+            name="jenis_kelamin"
+            value={formData.jenis_kelamin}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
+          >
             <option value="">Pilih Jenis Kelamin</option>
-            <option value="laki-laki">Laki-laki</option>
-            <option value="perempuan">Perempuan</option>
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
           </select>
         </div>
 
@@ -89,16 +145,38 @@ export default function TambahAkunForm() {
           <label className="block font-medium mb-1">Email</label>
           <input
             type="email"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-blue-400 bg-gray-100"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
+          />
+        </div>
+
+        {/* Password */}
+        <div>
+          <label className="block font-medium mb-1">Password</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-1 focus:outline-blue-400 bg-gray-100"
           />
         </div>
       </form>
 
       {/* Tombol Buat Akun */}
       <div className="mt-6 text-center">
-        <button className="bg-blue-500 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-600 transition">
-          Buat Akun
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="bg-blue-500 text-white font-medium py-2 px-6 rounded-md hover:bg-blue-600 transition"
+        >
+          {loading ? "Menyimpan..." : "Buat Akun"}
         </button>
+
+        {error && <p className="text-red-500 mt-2">{error}</p>}
+        {data && <p className="text-green-500 mt-2">Akun berhasil dibuat!</p>}
       </div>
     </div>
   );

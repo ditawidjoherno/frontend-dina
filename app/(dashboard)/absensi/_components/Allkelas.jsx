@@ -3,28 +3,33 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation"; 
 import { FaBook } from "react-icons/fa";
-import AddClassButton from "./tombolkelas";
 
 const initialClasses = [
-  "X A", "X B", "X C",
-  "X D", "XI A", "XI B", "XI C", "XI D",
-  "XII A", "XII D", "XII C", "XII D", "XII IBBU"
+  "X A", "X B", "X C", "X D",
+  "XI A", "XI B", "XI C", "XI D",
+  "XII A", "XII B", "XII C", "XII D", "XII IBBU"
 ];
+
+const romanToNumber = {
+  "X": "10",
+  "XI": "11",
+  "XII": "12"
+};
 
 const ClassCards = () => {
   const [classes, setClasses] = useState(initialClasses);
   const router = useRouter();
 
-  const addClass = (newClass) => {
-    setClasses([...classes, newClass]);
-  };
-
   const handleClassClick = (className) => {
-    router.push(`/Inputabsensi?kelas=${encodeURIComponent(className)}`);
+    const [roman, subClass] = className.split(" ");
+    const kelasAngka = romanToNumber[roman] || roman;
+    const kelasFinal = `${kelasAngka}${subClass}`;
+
+    router.push(`/Inputabsensi?kelas=${encodeURIComponent(kelasFinal)}`);
   };
 
   return (
-    <div className="p-8 w-full h-screen mb-10 -mt-5">
+    <div className="p-8 w-full min-h-screen mb-10 mt-5">
       <div className="grid grid-cols-3 gap-6 mt-6">
         {classes.map((className, index) => (
           <button
